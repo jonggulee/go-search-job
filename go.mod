@@ -1,4 +1,4 @@
-module jonggu/learngo
+module jonggu/search-job
 
 go 1.19
 

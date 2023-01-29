@@ -1,7 +1,7 @@
 package main
 
 import (
-	"jonggu/learngo/scrapper"
+	"jonggu/search-job/scrapper"
 	"os"
 	"strings"
 
@@ -9,6 +9,14 @@ import (
 )
 
 const fileName string = "jobs.csv"
+
+func main() {
+	scrapper.Scrape("term")
+	e := echo.New()
+	e.GET("/", handleHome)
+	e.POST("/scrape", handleScrape)
+	e.Logger.Fatal(e.Start(":1323"))
+}
 
 func handleHome(c echo.Context) error {
 	return c.File("home.html")
@@ -20,12 +28,4 @@ func handleScrape(c echo.Context) error {
 	userFileName := "jobs-" + term + ".csv"
 	defer os.Remove(fileName)
 	return c.Attachment(fileName, userFileName)
-}
-
-func main() {
-	scrapper.Scrape("term")
-	e := echo.New()
-	e.GET("/", handleHome)
-	e.POST("/scrape", handleScrape)
-	e.Logger.Fatal(e.Start(":1323"))
 }
