@@ -25,10 +25,10 @@ func Scrape(term string) {
 	var baseURL string = "https://www.jobkorea.co.kr/Search/?stext=" + term + "&tabType=recruit"
 	var jobs []extractedJob
 	c := make(chan []extractedJob)
-	totalPages := getPages()
+	totalPages := getPages(baseURL)
 	fmt.Println("totalPages:", totalPages)
 	for i := 1; i < totalPages+1; i++ {
-		go getPage(i, c)
+		go getPage(i, baseURL, c)
 	}
 
 	for i := 1; i < totalPages+1; i++ {
@@ -59,10 +59,10 @@ func wirteJobs(jobs []extractedJob) {
 	}
 }
 
-func getPage(page int, mainC chan<- []extractedJob) {
+func getPage(page int, url string, mainC chan<- []extractedJob) {
 	var jobs []extractedJob
 	c := make(chan extractedJob)
-	pageURL := baseURL + "&Page_No=" + strconv.Itoa(page)
+	pageURL := url + "&Page_No=" + strconv.Itoa(page)
 	fmt.Println("Requesting", pageURL)
 	res, err := http.Get(pageURL)
 	checkErr(err)
@@ -88,10 +88,10 @@ func getPage(page int, mainC chan<- []extractedJob) {
 
 func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 	id, _ := card.Attr("data-gno")
-	company := cleanString(card.Find(".post-list-corp>a").Text())
-	title := cleanString(card.Find(".post-list-info>a").Text())
-	location := cleanString(card.Find(".loc.short").Text())
-	summary := cleanString(card.Find(".etc").Text())
+	company := CleanString(card.Find(".post-list-corp>a").Text())
+	title := CleanString(card.Find(".post-list-info>a").Text())
+	location := CleanString(card.Find(".loc.short").Text())
+	summary := CleanString(card.Find(".etc").Text())
 	c <- extractedJob{
 		id:       id,
 		company:  company,
@@ -101,9 +101,9 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 	// fmt.Println(id, title, location, summary)
 }
 
-func getPages() int {
+func getPages(url string) int {
 	pages := 0
-	res, err := http.Get(baseURL)
+	res, err := http.Get(url)
 	// fmt.Println(res)
 	checkErr(err)
 	checkCode(res)
@@ -131,6 +131,6 @@ func checkCode(res *http.Response) {
 	}
 }
 
-func cleanString(str string) string {
+func CleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
